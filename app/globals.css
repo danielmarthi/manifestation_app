@@ -1,26 +1,91 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Warm grounded palette */
+  --background: #f5f0e8;
+  --surface: #faf6ef;
+  --surface-2: #efe7d8;
+  --ink: #1f1a16;
+  --ink-soft: #4a3f36;
+  --ink-muted: #8a7d70;
+  --line: #d9cdb9;
+  --terracotta: #b35a3a;
+  --terracotta-soft: #c97a5b;
+  --ochre: #b8862a;
+  --gold: #d4a849;
+  --gold-soft: #e6c47a;
+  --gray-old: #c9c3bb;
+  --sos: #b04a3a;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-terracotta: var(--terracotta);
+  --color-terracotta-soft: var(--terracotta-soft);
+  --color-ochre: var(--ochre);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gray-old: var(--gray-old);
+  --color-sos: var(--sos);
+  --font-serif: var(--font-serif-family);
+  --font-sans: var(--font-sans-family);
+  --font-mono: var(--font-mono-family);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
+html, body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  font-family: var(--font-sans-family), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-serif-family), Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.page-fade {
+  animation: pageFade 600ms ease-out;
+}
+
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.breath-pulse {
+  animation: breathPulse 5s ease-in-out infinite;
+}
+
+@keyframes breathPulse {
+  0%, 100% { transform: scale(0.82); opacity: 0.65; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+
+.candle-glow {
+  animation: candleGlow 3.5s ease-in-out infinite;
+}
+
+@keyframes candleGlow {
+  0%, 100% { opacity: 0.85; filter: blur(0px); }
+  50% { opacity: 1; filter: blur(0.3px); }
+}
+
+.old-self-treatment {
+  filter: grayscale(0.85) blur(0.4px) brightness(0.95);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.divider-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--line), transparent);
 }
