@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { completeOnboarding } from "../actions/onboarding";
 
 interface Round {
   id: string;
@@ -74,7 +75,9 @@ export function Onboarding() {
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [stage, setStage] = useState<"answer" | "reflect">("answer");
-  const [showProfile, setShowProfile] = useState(false);
+  const [stage2, setStage2] = useState<"in-flow" | "generating" | "error">("in-flow");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const round = rounds[i];
 
@@ -89,11 +92,29 @@ export function Onboarding() {
       setI(i + 1);
       setStage("answer");
     } else {
-      setShowProfile(true);
+      // Last round done — call the server action.
+      setStage2("generating");
+      setErrorMsg(null);
+      startTransition(async () => {
+        try {
+          await completeOnboarding({
+            desire: answers.desire || "",
+            block: answers.block || "",
+            body: answers.body || "",
+            self: answers.self || "",
+            practice: answers.practice || "",
+          });
+          // completeOnboarding redirects on success — control won't return here.
+        } catch (e: unknown) {
+          setErrorMsg(e instanceof Error ? e.message : "Something went wrong.");
+          setStage2("error");
+        }
+      });
     }
   }
 
-  if (showProfile) return <BeliefProfile answers={answers} />;
+  if (stage2 === "generating" || isPending) return <Generating />;
+  if (stage2 === "error") return <ErrorView message={errorMsg} onRetry={() => setStage2("in-flow")} />;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -193,65 +214,59 @@ function Reflection({ text, onNext, isLast }: { text: string; onNext: () => void
   );
 }
 
-function BeliefProfile({ answers }: { answers: Record<string, string> }) {
+function Generating() {
   return (
-    <div className="min-h-screen bg-background flex flex-col page-fade">
-      <div className="flex-1 flex items-center justify-center px-8 py-16">
-        <div className="max-w-2xl w-full">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-3">
-            Your Belief Profile
-          </div>
-          <h1 className="font-display text-[36px] text-ink leading-tight mb-6">
-            Here's what I see — honestly.
-          </h1>
-
-          <div className="bg-surface border border-line rounded-2xl p-7 mb-6">
-            <p className="font-display text-[18px] leading-[1.65] text-ink-soft">
-              You want{" "}
-              <span className="text-ink italic">
-                {answers.desire || "more than the version of life you're currently allowing yourself"}
-              </span>
-              . You've been keeping a quiet ledger of every time it didn't land — and that
-              ledger has become the loudest voice in the room. Your body knows: when
-              you reach for the desire, something{" "}
-              <span className="text-ink italic">
-                {answers.body || "tightens"}
-              </span>
-              . Your future self isn't far away. She's just been waiting for you to stop
-              flinching when she walks in.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-surface border border-line rounded-xl p-5">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted mb-2">
-                Primary block type
-              </div>
-              <div className="font-display text-[18px] text-ink">Past evidence</div>
-              <p className="text-[12px] text-ink-muted mt-1">
-                "It hasn't worked, so it won't."
-              </p>
-            </div>
-            <div className="bg-surface border border-line rounded-xl p-5">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted mb-2">
-                Direction
-              </div>
-              <div className="font-display text-[18px] text-ink">
-                {answers.self || "Becoming"}
-              </div>
-              <p className="text-[12px] text-ink-muted mt-1">
-                Your future self's one-word doorway.
-              </p>
-            </div>
-          </div>
-
-          <Link
-            href="/"
-            className="inline-block px-6 py-3 rounded-full bg-ink text-surface text-[13.5px] hover:bg-ink-soft transition-colors"
-          >
-            Begin Phase 1 — The Honest Audit
-          </Link>
+    <div className="min-h-screen bg-background flex items-center justify-center px-8 page-fade">
+      <div className="text-center max-w-md">
+        <div className="relative w-32 h-32 mx-auto mb-8">
+          <div
+            className="absolute inset-0 rounded-full breath-pulse"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(212,168,73,0.7) 0%, rgba(179,90,58,0.25) 55%, transparent 80%)",
+            }}
+          />
         </div>
+        <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-3">
+          Reading what you said
+        </div>
+        <h1 className="font-display text-[28px] text-ink leading-tight">
+          Composing your belief profile.
+        </h1>
+        <p className="mt-4 text-[14px] text-ink-soft">
+          Naming the block. Drafting the future self. Writing your assumption.
+          Less than a minute.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ErrorView({
+  message,
+  onRetry,
+}: {
+  message: string | null;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center px-8 page-fade">
+      <div className="max-w-md w-full text-center">
+        <div className="text-[10px] uppercase tracking-[0.2em] text-sos mb-3">
+          The coach paused
+        </div>
+        <h1 className="font-display text-[26px] text-ink leading-tight mb-4">
+          Something interrupted the line.
+        </h1>
+        <p className="text-[14px] text-ink-soft mb-6">
+          {message || "An unknown error came back. Try again."}
+        </p>
+        <button
+          onClick={onRetry}
+          className="px-6 py-3 rounded-full bg-ink text-surface text-[13.5px] hover:bg-ink-soft transition-colors"
+        >
+          Try the last step again
+        </button>
       </div>
     </div>
   );

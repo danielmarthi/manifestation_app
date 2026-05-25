@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { mockUser } from "../lib/mockUser";
+import type { ProfileRow } from "../lib/supabase/types";
 
-export function Header() {
+export function Header({ profile }: { profile: ProfileRow }) {
+  const initial = (profile.first_name ?? "?")[0]?.toUpperCase() ?? "?";
   return (
     <header className="h-14 border-b border-line bg-surface/80 backdrop-blur-sm sticky top-0 z-30 flex items-center justify-between px-6">
       <Link href="/" className="flex items-center gap-2.5 group">
@@ -28,13 +29,19 @@ export function Header() {
       <div className="flex items-center gap-3">
         <div className="hidden sm:flex flex-col items-end">
           <span className="text-[11px] uppercase tracking-[0.16em] text-ink-muted leading-tight">
-            Day {mockUser.streak}
+            Day {profile.streak}
           </span>
-          <span className="text-[11px] text-ink-soft leading-tight">Phase {mockUser.currentPhase} of 5</span>
+          <span className="text-[11px] text-ink-soft leading-tight">Phase {profile.current_phase} of 5</span>
         </div>
-        <div className="w-9 h-9 rounded-full bg-surface-2 border border-line flex items-center justify-center font-display text-[14px] text-ink-soft">
-          {mockUser.firstName[0]}
-        </div>
+        <form action="/auth/signout" method="post" className="flex">
+          <button
+            type="submit"
+            title="Sign out"
+            className="w-9 h-9 rounded-full bg-surface-2 border border-line flex items-center justify-center font-display text-[14px] text-ink-soft hover:bg-line transition-colors"
+          >
+            {initial}
+          </button>
+        </form>
       </div>
     </header>
   );

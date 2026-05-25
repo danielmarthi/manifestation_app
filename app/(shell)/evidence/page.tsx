@@ -1,17 +1,8 @@
-import { mockUser } from "../../lib/mockUser";
-
-const moreEvidence = [
-  { id: "e4", date: "4 days ago", kind: "win", text: "Asked for the raise I'd been avoiding. They said they'd been waiting for me to bring it up." },
-  { id: "e5", date: "5 days ago", kind: "synchronicity", text: "The number 444 three times in one afternoon. Each time I felt a quiet 'yes.'" },
-  { id: "e6", date: "6 days ago", kind: "receiving", text: "An old client referred me to someone new, unprompted." },
-  { id: "e7", date: "8 days ago", kind: "synchronicity", text: "Overheard the exact phrase from my visualization on the radio in a coffee shop." },
-  { id: "e8", date: "10 days ago", kind: "win", text: "Bank balance higher than expected. Didn't double-check it nine times — just trusted." },
-  { id: "e9", date: "12 days ago", kind: "receiving", text: "A surprise tax refund — $312." },
-];
+import { getProfile, getAllEvidence } from "../../lib/data";
 
 const milestones = [
   { day: 7, label: "Practice is a habit" },
-  { day: 14, label: "Identity has texture", reached: true },
+  { day: 14, label: "Identity has texture" },
   { day: 30, label: "Receiving feels safe" },
   { day: 60, label: "Old self is unfamiliar" },
   { day: 90, label: "It's already arriving" },
@@ -24,8 +15,21 @@ const colorByKind: Record<string, string> = {
   resistance: "var(--ink-muted)",
 };
 
-export default function EvidencePage() {
-  const all = [...mockUser.recentEvidence, ...moreEvidence];
+function formatRelative(iso: string): string {
+  const then = new Date(iso).getTime();
+  const now = Date.now();
+  const days = Math.floor((now - then) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} wk ago`;
+  return `${Math.floor(days / 30)} mo ago`;
+}
+
+export default async function EvidencePage() {
+  const [profile, all] = await Promise.all([getProfile(), getAllEvidence()]);
+  if (!profile) return null;
+
   return (
     <div className="page-fade px-8 lg:px-12 py-10 max-w-[960px] mx-auto">
       <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-2">
@@ -44,7 +48,7 @@ export default function EvidencePage() {
         <div className="bg-surface border border-line rounded-2xl p-6">
           <div className="flex justify-between items-end">
             {milestones.map((m) => {
-              const reached = mockUser.streak >= m.day;
+              const reached = profile.streak >= m.day;
               return (
                 <div key={m.day} className="flex flex-col items-center text-center flex-1 px-2">
                   <span
@@ -79,25 +83,39 @@ export default function EvidencePage() {
       <section>
         <h2 className="font-display text-[20px] text-ink mb-1">All entries</h2>
         <p className="text-[12px] text-ink-muted mb-5">
-          {all.length} signals · grouped by what they're training in you.
+          {all.length} signal{all.length === 1 ? "" : "s"} · grouped by what they're training in you.
         </p>
-        <div className="space-y-3">
-          {all.map((e) => (
-            <div key={e.id} className="bg-surface border border-line rounded-xl px-5 py-4">
-              <div className="flex items-center gap-3 mb-2">
-                <span
-                  className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: colorByKind[e.kind] }}
-                />
-                <span className="text-[10px] uppercase tracking-[0.18em] text-ink-muted">
-                  {e.kind}
-                </span>
-                <span className="text-[11px] text-ink-muted ml-auto">{e.date}</span>
+        {all.length === 0 ? (
+          <div className="bg-surface border border-line rounded-xl p-7 text-center">
+            <p className="text-[13.5px] text-ink-soft mb-1">
+              The journal is quiet — for now.
+            </p>
+            <p className="text-[12px] text-ink-muted">
+              Log a small win or synchronicity from the dashboard. The eye is trained
+              by use, not by waiting.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {all.map((e) => (
+              <div key={e.id} className="bg-surface border border-line rounded-xl px-5 py-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ background: colorByKind[e.kind] }}
+                  />
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-ink-muted">
+                    {e.kind}
+                  </span>
+                  <span className="text-[11px] text-ink-muted ml-auto">
+                    {formatRelative(e.occurred_at)}
+                  </span>
+                </div>
+                <p className="text-[14px] text-ink leading-[1.55]">{e.text}</p>
               </div>
-              <p className="text-[14px] text-ink leading-[1.55]">{e.text}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

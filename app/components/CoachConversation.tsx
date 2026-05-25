@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { mockUser } from "../lib/mockUser";
 
 interface Msg {
   role: "user" | "assistant";
   content: string;
+}
+
+interface CoachConversationProps {
+  conversationId: string;
+  firstName: string;
+  streak: number;
+  assumption: string;
+  recentEvidenceCount: number;
 }
 
 const SUGGESTIONS = [
@@ -15,17 +22,17 @@ const SUGGESTIONS = [
   "I need to do The Test Reframe.",
 ];
 
-const OPENERS = [
-  `Good morning, ${mockUser.firstName}. Day ${mockUser.streak} — you've kept showing up. What's alive for you this morning?`,
-  `Hi ${mockUser.firstName}. I noticed yesterday you logged an unexpected refund. That's the third small return this week. Want to talk about what that's training in you?`,
-  `${mockUser.firstName}. Welcome back. Your assumption today is "${mockUser.assumption}" — how true does that sentence feel right now, on a scale you actually mean?`,
-];
-
-export function CoachConversation() {
+export function CoachConversation({
+  conversationId,
+  firstName,
+  streak,
+  assumption,
+  recentEvidenceCount,
+}: CoachConversationProps) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [opener] = useState(() => OPENERS[Math.floor(Math.random() * OPENERS.length)]);
+  const [opener] = useState(() => pickOpener({ firstName, streak, assumption, recentEvidenceCount }));
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,7 +51,7 @@ export function CoachConversation() {
       const res = await fetch("/api/coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, conversationId }),
       });
       const data = await res.json();
       const reply: string =
@@ -52,7 +59,7 @@ export function CoachConversation() {
         data.error ||
         "The coach is silent for a moment. Try again.";
       setMessages([...next, { role: "assistant", content: reply }]);
-    } catch (e) {
+    } catch {
       setMessages([
         ...next,
         {
@@ -166,4 +173,20 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
       </div>
     </div>
   );
+}
+
+function pickOpener(ctx: {
+  firstName: string;
+  streak: number;
+  assumption: string;
+  recentEvidenceCount: number;
+}): string {
+  const openers = [
+    `Good morning, ${ctx.firstName}. Day ${ctx.streak} — you've kept showing up. What's alive for you this morning?`,
+    ctx.recentEvidenceCount
+      ? `Hi ${ctx.firstName}. You've logged ${ctx.recentEvidenceCount} signals recently. Want to talk about what that's training in you?`
+      : `Hi ${ctx.firstName}. The journal's still quiet — let's change that. What's stirring this morning?`,
+    `${ctx.firstName}. Welcome back. Your assumption today is "${ctx.assumption}" — how true does that sentence feel right now, on a scale you actually mean?`,
+  ];
+  return openers[Math.floor(Math.random() * openers.length)];
 }

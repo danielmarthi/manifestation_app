@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Sun, Compass, Book, Heart, Spark, Chat, Journal, Path, Flame } from "./Icons";
 import { SOSModal } from "./SOSModal";
+import type { ProfileRow } from "../lib/supabase/types";
 
 const links = [
   { href: "/", label: "Dashboard", icon: Sun },
@@ -16,7 +17,7 @@ const links = [
   { href: "/learn", label: "Learn", icon: Book },
 ];
 
-export function LeftNav() {
+export function LeftNav({ profile }: { profile: ProfileRow }) {
   const pathname = usePathname();
   const [sosOpen, setSosOpen] = useState(false);
 
@@ -68,7 +69,7 @@ export function LeftNav() {
         </div>
       </aside>
 
-      <SOSModal open={sosOpen} onClose={() => setSosOpen(false)} />
+      <SOSModal open={sosOpen} onClose={() => setSosOpen(false)} profile={profile} />
     </>
   );
 }

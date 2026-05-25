@@ -1,25 +1,54 @@
 "use client";
 
-import { useState } from "react";
-import { mockUser } from "../lib/mockUser";
+import { useState, useTransition } from "react";
+import { completePracticeStep } from "../actions/practice";
+
+type StepId = "breathe" | "be" | "see" | "thank" | "assume";
 
 interface Step {
-  id: string;
+  id: StepId;
   title: string;
   cue: string;
   body: React.ReactNode;
   cta: string;
 }
 
-export function PracticeFlow() {
-  const [i, setI] = useState(0);
-  const [gratitude, setGratitude] = useState("");
-  const [done, setDone] = useState(false);
+interface PracticeFlowProps {
+  assumption: string;
+  streak: number;
+  identityStatements: string[];
+  stepsAlreadyDone: Record<string, boolean>;
+  gratitudeAlready: string;
+  futureSelfBody: string[];
+}
 
-  const todayStatement =
-    mockUser.identityStatements[
-      new Date().getDate() % mockUser.identityStatements.length
-    ];
+const FALLBACK_VISUALIZATION = [
+  "It's a Tuesday morning, six months from now. You go through your day and notice that the old knot has gone quiet.",
+  "You make a decision today as the version of you who already has what you wanted. Notice how unhurried it is.",
+  "You hold an image of yourself walking through the life you've been writing toward. Stay there for a slow breath.",
+];
+
+export function PracticeFlow({
+  assumption,
+  streak,
+  identityStatements,
+  stepsAlreadyDone,
+  gratitudeAlready,
+  futureSelfBody,
+}: PracticeFlowProps) {
+  const initialIndex = pickStartIndex(stepsAlreadyDone);
+  const [i, setI] = useState(initialIndex);
+  const [gratitude, setGratitude] = useState(gratitudeAlready);
+  const [done, setDone] = useState(initialIndex >= 5);
+  const [isPending, startTransition] = useTransition();
+
+  const todaysStatement = identityStatements.length
+    ? identityStatements[new Date().getDate() % identityStatements.length]
+    : "I am the kind of person life is moving toward.";
+
+  const visualization = futureSelfBody.length
+    ? futureSelfBody.slice(0, 3)
+    : FALLBACK_VISUALIZATION;
 
   const steps: Step[] = [
     {
@@ -51,7 +80,7 @@ export function PracticeFlow() {
       body: (
         <div className="py-10 text-center">
           <p className="font-display text-[36px] sm:text-[44px] text-ink leading-[1.1]">
-            "{todayStatement}"
+            “{todaysStatement}”
           </p>
           <p className="mt-6 text-[12px] text-ink-muted">
             Does it feel like expansion or performance? Stay with the lines that expand.
@@ -66,13 +95,11 @@ export function PracticeFlow() {
       cue: "Today's visualization — read slowly. Hold the image.",
       body: (
         <div className="py-8 max-w-xl mx-auto">
-          <p className="font-display text-[19px] text-ink-soft leading-[1.65]">
-            It's a Tuesday morning, six months from now. You open your bank account
-            and the number doesn't make your chest tighten. You notice the absence
-            of the old knot — and almost laugh at how foreign the panic feels now.
-            You think about a recent transfer you sent to someone who needed it.
-            You gave it without flinching. You move on with your day.
-          </p>
+          <div className="space-y-4 font-display text-[18px] text-ink-soft leading-[1.65]">
+            {visualization.map((line, idx) => (
+              <p key={idx}>{line}</p>
+            ))}
+          </div>
           <div className="mt-6 p-4 rounded-lg bg-surface-2/70 border border-line">
             <p className="text-[12px] text-ink-muted mb-1">Body check</p>
             <p className="text-[13.5px] text-ink-soft">
@@ -116,7 +143,7 @@ export function PracticeFlow() {
             My assumption
           </div>
           <p className="font-display text-[34px] sm:text-[42px] text-ink leading-[1.1]">
-            "{mockUser.assumption}"
+            “{assumption}”
           </p>
           <p className="mt-8 text-[13px] text-ink-soft">
             Close your eyes. Say it. Notice if it lands as fact, not wish.
@@ -127,9 +154,17 @@ export function PracticeFlow() {
     },
   ];
 
-  function next() {
-    if (i < steps.length - 1) setI(i + 1);
-    else setDone(true);
+  function advance() {
+    const current = steps[i];
+    startTransition(async () => {
+      await completePracticeStep({
+        step: current.id,
+        done: true,
+        gratitude: current.id === "thank" ? gratitude : undefined,
+      });
+      if (i < steps.length - 1) setI(i + 1);
+      else setDone(true);
+    });
   }
 
   if (done) {
@@ -147,7 +182,7 @@ export function PracticeFlow() {
             />
           </div>
           <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-3">
-            Day {mockUser.streak} complete
+            Day {streak} complete
           </div>
           <h1 className="font-display text-[32px] text-ink mb-4 leading-tight">
             Quietly, you returned.
@@ -197,18 +232,27 @@ export function PracticeFlow() {
       <div className="px-8 py-6 border-t border-line/60 flex items-center justify-between max-w-3xl mx-auto w-full">
         <button
           onClick={() => i > 0 && setI(i - 1)}
-          disabled={i === 0}
+          disabled={i === 0 || isPending}
           className="text-[12px] text-ink-muted hover:text-ink-soft disabled:opacity-30"
         >
           ← back
         </button>
         <button
-          onClick={next}
-          className="px-6 py-2.5 rounded-full bg-ink text-surface text-[13px] hover:bg-ink-soft transition-colors"
+          onClick={advance}
+          disabled={isPending}
+          className="px-6 py-2.5 rounded-full bg-ink text-surface text-[13px] hover:bg-ink-soft transition-colors disabled:opacity-60"
         >
-          {step.cta}
+          {isPending ? "saving…" : step.cta}
         </button>
       </div>
     </div>
   );
+}
+
+function pickStartIndex(stepsDone: Record<string, boolean>): number {
+  const order: StepId[] = ["breathe", "be", "see", "thank", "assume"];
+  for (let i = 0; i < order.length; i++) {
+    if (!stepsDone[order[i]]) return i;
+  }
+  return order.length;
 }

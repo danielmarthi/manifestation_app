@@ -1,4 +1,4 @@
-import { mockUser } from "../../lib/mockUser";
+import { getProfile } from "../../lib/data";
 
 const phases = [
   {
@@ -38,7 +38,10 @@ const phases = [
   },
 ];
 
-export default function PhasesPage() {
+export default async function PhasesPage() {
+  const profile = await getProfile();
+  if (!profile) return null;
+
   return (
     <div className="page-fade px-8 lg:px-12 py-10 max-w-[920px] mx-auto">
       <div className="text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-2">
@@ -55,8 +58,8 @@ export default function PhasesPage() {
 
       <div className="space-y-5">
         {phases.map((p) => {
-          const isDone = p.n < mockUser.currentPhase;
-          const isCurrent = p.n === mockUser.currentPhase;
+          const isDone = p.n < profile.current_phase;
+          const isCurrent = p.n === profile.current_phase;
           return (
             <div
               key={p.n}

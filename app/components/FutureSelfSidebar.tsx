@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { mockUser } from "../lib/mockUser";
+import type { ProfileRow } from "../lib/supabase/types";
 
-export function FutureSelfSidebar() {
+export function FutureSelfSidebar({ profile }: { profile: ProfileRow }) {
   const [showOld, setShowOld] = useState(false);
-  const user = mockUser;
+
+  const futureName = profile.future_self_name || `${profile.first_name ?? "You"}, Future`;
+  const futureBody = profile.future_self_body ?? [];
+  const futureTraits = profile.future_self_traits ?? [];
+  const oldName = profile.old_self_name || `${profile.first_name ?? "You"}, Before`;
+  const oldBody = profile.old_self_body ?? [];
 
   return (
     <aside className="hidden lg:flex w-[320px] shrink-0 border-l border-line bg-surface flex-col">
@@ -24,7 +29,8 @@ export function FutureSelfSidebar() {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 candle-glow pointer-events-none"
+            <div
+              className="absolute inset-0 candle-glow pointer-events-none"
               style={{
                 background:
                   "radial-gradient(circle at 50% 45%, rgba(230,196,122,0.18) 0%, transparent 65%)",
@@ -32,18 +38,20 @@ export function FutureSelfSidebar() {
             />
           </div>
           <div className="mt-5 font-display text-[22px] leading-tight text-ink">
-            {user.futureSelf.name}
+            {futureName}
           </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {user.futureSelf.traits.map((t) => (
-              <span
-                key={t}
-                className="text-[10px] uppercase tracking-[0.14em] text-ink-soft border border-line/80 px-2 py-0.5 rounded-full bg-background/40"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
+          {futureTraits.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {futureTraits.map((t) => (
+                <span
+                  key={t}
+                  className="text-[10px] uppercase tracking-[0.14em] text-ink-soft border border-line/80 px-2 py-0.5 rounded-full bg-background/40"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="divider-line mx-6" />
@@ -53,7 +61,7 @@ export function FutureSelfSidebar() {
             Who she is
           </div>
           <div className="space-y-3 font-display text-[15px] leading-[1.55] text-ink-soft">
-            {user.futureSelf.body.map((line, i) => (
+            {futureBody.map((line, i) => (
               <p key={i}>{line}</p>
             ))}
           </div>
@@ -78,7 +86,7 @@ export function FutureSelfSidebar() {
                   Where I came from
                 </div>
                 <div className="text-[13px] text-ink-soft group-hover:text-ink transition-colors">
-                  {user.oldSelf.name}
+                  {oldName}
                 </div>
               </div>
             </div>
@@ -87,22 +95,32 @@ export function FutureSelfSidebar() {
         </div>
       </div>
 
-      {showOld && <OldSelfPopout onClose={() => setShowOld(false)} />}
+      {showOld && (
+        <OldSelfPopout
+          name={oldName}
+          body={oldBody}
+          onClose={() => setShowOld(false)}
+        />
+      )}
     </aside>
   );
 }
 
-function OldSelfPopout({ onClose }: { onClose: () => void }) {
-  const user = mockUser;
+function OldSelfPopout({
+  name,
+  body,
+  onClose,
+}: {
+  name: string;
+  body: string[];
+  onClose: () => void;
+}) {
   return (
     <div
       className="fixed inset-0 z-40 flex items-center justify-center p-6"
       onClick={onClose}
     >
-      <div
-        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-        aria-hidden
-      />
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" aria-hidden />
       <div
         className="relative z-10 max-w-md w-full bg-surface border border-line rounded-2xl shadow-2xl p-7 page-fade"
         onClick={(e) => e.stopPropagation()}
@@ -114,10 +132,10 @@ function OldSelfPopout({ onClose }: { onClose: () => void }) {
           <Image src="/avatars/old.svg" alt="Old self" width={128} height={128} />
         </div>
         <div className="font-display text-[22px] text-ink-soft mb-3 old-self-treatment">
-          {user.oldSelf.name}
+          {name}
         </div>
         <div className="space-y-3 text-[14px] leading-[1.6] text-ink-muted">
-          {user.oldSelf.body.map((line, i) => (
+          {body.map((line, i) => (
             <p key={i}>{line}</p>
           ))}
         </div>

@@ -1,19 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { mockUser } from "../lib/mockUser";
+import { useState, useEffect, useTransition } from "react";
+import type { ProfileRow } from "../lib/supabase/types";
+import { logSos } from "../actions/sos";
 
 type Step = 1 | 2 | 3;
 
-export function SOSModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+interface SOSModalProps {
+  open: boolean;
+  onClose: () => void;
+  profile: ProfileRow;
+}
+
+export function SOSModal({ open, onClose, profile }: SOSModalProps) {
   const [step, setStep] = useState<Step>(1);
   const [feeling, setFeeling] = useState("");
+  const [logId, setLogId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     if (!open) {
       setTimeout(() => {
         setStep(1);
         setFeeling("");
+        setLogId(null);
       }, 300);
     }
   }, [open]);
@@ -27,6 +37,24 @@ export function SOSModal({ open, onClose }: { open: boolean; onClose: () => void
   }, [open, onClose]);
 
   if (!open) return null;
+
+  function goToReframe() {
+    startTransition(async () => {
+      const result = await logSos({ feeling, step: "named" });
+      if (result.ok && result.id) setLogId(result.id);
+      setStep(2);
+    });
+  }
+
+  function goToReturn() {
+    if (logId) startTransition(async () => { await logSos({ id: logId, step: "reframed" }); });
+    setStep(3);
+  }
+
+  function finish() {
+    if (logId) startTransition(async () => { await logSos({ id: logId, step: "returned" }); });
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
@@ -78,7 +106,7 @@ export function SOSModal({ open, onClose }: { open: boolean; onClose: () => void
               />
               <div className="mt-5 flex justify-end">
                 <button
-                  onClick={() => setStep(2)}
+                  onClick={goToReframe}
                   className="px-5 py-2 rounded-full bg-ink text-surface text-[13px] hover:bg-ink-soft transition-colors"
                 >
                   Continue →
@@ -97,17 +125,20 @@ export function SOSModal({ open, onClose }: { open: boolean; onClose: () => void
               </h2>
               <div className="space-y-3 text-[15px] leading-[1.6] text-ink-soft border-l-2 border-terracotta pl-5">
                 <p>
-                  {mockUser.firstName}, this moment is not a verdict. It's the texture
-                  of the test before the threshold.
+                  {profile.first_name ?? "Friend"}, this moment is not a verdict.
+                  It's the texture of the test before the threshold.
                 </p>
                 <p>
-                  Your evidence journal already holds <span className="text-ink font-medium">{mockUser.recentEvidence.length} signals from this week alone</span>.
-                  The story "it doesn't work for me" is the old self talking — and you
-                  archived her in Phase 2.
+                  Your future self would look at this and not even flinch. She
+                  knows what's already in motion. You've shown up{" "}
+                  <span className="text-ink font-medium">
+                    {profile.streak} day{profile.streak === 1 ? "" : "s"}
+                  </span>
+                  {" "}— that streak is the proof, not the panic.
                 </p>
                 <p>
-                  Your future self would look at this and not even flinch. She knows
-                  what's already in motion.
+                  The story "it's not working" is the old self talking. The
+                  current you knows better.
                 </p>
               </div>
               <div className="mt-6 flex justify-between">
@@ -118,7 +149,7 @@ export function SOSModal({ open, onClose }: { open: boolean; onClose: () => void
                   ← back
                 </button>
                 <button
-                  onClick={() => setStep(3)}
+                  onClick={goToReturn}
                   className="px-5 py-2 rounded-full bg-ink text-surface text-[13px] hover:bg-ink-soft transition-colors"
                 >
                   Continue →
@@ -141,7 +172,7 @@ export function SOSModal({ open, onClose }: { open: boolean; onClose: () => void
                   Your assumption
                 </div>
                 <p className="font-display text-[20px] text-ink leading-tight">
-                  "{mockUser.assumption}"
+                  “{profile.assumption ?? "It is already done."}”
                 </p>
               </div>
 
@@ -168,7 +199,7 @@ export function SOSModal({ open, onClose }: { open: boolean; onClose: () => void
                   ← back
                 </button>
                 <button
-                  onClick={onClose}
+                  onClick={finish}
                   className="px-5 py-2 rounded-full border border-line text-ink-soft text-[13px] hover:bg-surface-2 transition-colors"
                 >
                   Return to my day

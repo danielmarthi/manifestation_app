@@ -1,30 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Plus, Spark, Heart, Flame } from "./Icons";
+import { logEvidence } from "../actions/evidence";
+import type { EvidenceKind } from "../lib/supabase/types";
 
-type Kind = "win" | "synchronicity" | "receiving" | "resistance";
-
-const kinds: { id: Kind; label: string; hint: string }[] = [
-  { id: "win", label: "A small win", hint: "Something that landed today, however small." },
-  { id: "synchronicity", label: "A synchronicity", hint: "A nudge from the universe — a name, a number, a door opening." },
-  { id: "receiving", label: "Receiving", hint: "Something that came without forcing." },
-  { id: "resistance", label: "Resistance", hint: "A thought, a tightening — log it to dissolve it." },
+const kinds: { id: EvidenceKind; label: string; hint: string }[] = [
+  { id: "win",            label: "A small win",     hint: "Something that landed today, however small." },
+  { id: "synchronicity",  label: "A synchronicity", hint: "A nudge from the universe — a name, a number, a door opening." },
+  { id: "receiving",      label: "Receiving",       hint: "Something that came without forcing." },
+  { id: "resistance",     label: "Resistance",      hint: "A thought, a tightening — log it to dissolve it." },
 ];
 
 export function QuickLog() {
-  const [active, setActive] = useState<Kind | null>(null);
+  const [active, setActive] = useState<EvidenceKind | null>(null);
   const [text, setText] = useState("");
   const [saved, setSaved] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   function save() {
-    if (!text.trim()) return;
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      setActive(null);
-      setText("");
-    }, 1500);
+    if (!text.trim() || !active) return;
+    const kind = active;
+    const value = text.trim();
+    setErrorMsg(null);
+    startTransition(async () => {
+      const result = await logEvidence(kind, value);
+      if (!result.ok) {
+        setErrorMsg(result.error);
+        return;
+      }
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+        setActive(null);
+        setText("");
+      }, 1500);
+    });
   }
 
   return (
@@ -75,21 +87,28 @@ export function QuickLog() {
               type="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") save();
+              }}
               placeholder="In one line…"
               className="flex-1 px-4 py-2.5 bg-background border border-line rounded-lg text-[14px] focus:outline-none focus:border-terracotta"
             />
             <button
               onClick={save}
+              disabled={isPending || !text.trim()}
               className={
-                "px-5 rounded-lg text-[13px] transition-colors flex items-center gap-1.5 " +
+                "px-5 rounded-lg text-[13px] transition-colors flex items-center gap-1.5 disabled:opacity-50 " +
                 (saved
                   ? "bg-ochre text-surface"
                   : "bg-ink text-surface hover:bg-ink-soft")
               }
             >
-              {saved ? "Logged ✓" : (<><Plus /> Log</>)}
+              {saved ? "Logged ✓" : isPending ? "…" : (<><Plus /> Log</>)}
             </button>
           </div>
+          {errorMsg && (
+            <p className="mt-2 text-[12px] text-sos">{errorMsg}</p>
+          )}
         </div>
       )}
     </section>
