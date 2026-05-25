@@ -162,5 +162,5 @@ Generate the JSON belief profile now.`;
     if (error) throw new Error(error.message);
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }

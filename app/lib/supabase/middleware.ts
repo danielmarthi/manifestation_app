@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./types";
 
-const PUBLIC_PATHS = ["/sign-in", "/auth", "/_next", "/favicon.ico"];
+// Path prefixes that don't require auth (landing handled separately as exact "/").
+const PUBLIC_PREFIXES = ["/sign-in", "/auth", "/_next", "/favicon.ico"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -34,7 +35,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
+  // The landing page at "/" is public; everything under it follows prefix rules.
+  const isPublic =
+    path === "/" || PUBLIC_PREFIXES.some((p) => path.startsWith(p));
 
   // Logged out → bounce to sign-in (except for public paths)
   if (!user && !isPublic) {
@@ -47,7 +50,7 @@ export async function updateSession(request: NextRequest) {
   // Logged in but visiting /sign-in → bounce to dashboard
   if (user && path === "/sign-in") {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
   }

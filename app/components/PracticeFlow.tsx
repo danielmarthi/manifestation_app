@@ -192,7 +192,7 @@ export function PracticeFlow({
             receive what's already on its way.
           </p>
           <a
-            href="/"
+            href="/dashboard"
             className="inline-block mt-8 px-6 py-2.5 rounded-full border border-line text-[13px] text-ink-soft hover:bg-surface-2 transition-colors"
           >
             Carry it into the day

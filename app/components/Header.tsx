@@ -5,7 +5,7 @@ export function Header({ profile }: { profile: ProfileRow }) {
   const initial = (profile.first_name ?? "?")[0]?.toUpperCase() ?? "?";
   return (
     <header className="h-14 border-b border-line bg-surface/80 backdrop-blur-sm sticky top-0 z-30 flex items-center justify-between px-6">
-      <Link href="/" className="flex items-center gap-2.5 group">
+      <Link href="/dashboard" className="flex items-center gap-2.5 group">
         <span
           className="block w-6 h-6 rounded-full"
           style={{
@@ -20,7 +20,7 @@ export function Header({ profile }: { profile: ProfileRow }) {
       </Link>
 
       <nav className="hidden md:flex items-center gap-7 text-[13px] text-ink-soft">
-        <Link href="/" className="hover:text-ink transition-colors">Today</Link>
+        <Link href="/dashboard" className="hover:text-ink transition-colors">Today</Link>
         <Link href="/coach" className="hover:text-ink transition-colors">Coach</Link>
         <Link href="/evidence" className="hover:text-ink transition-colors">Evidence</Link>
         <Link href="/learn" className="hover:text-ink transition-colors">Learn</Link>

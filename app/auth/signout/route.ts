@@ -6,5 +6,6 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return NextResponse.redirect(new URL("/sign-in", request.url), { status: 303 });
+  // Sign out returns the user to the public landing page.
+  return NextResponse.redirect(new URL("/", request.url), { status: 303 });
 }

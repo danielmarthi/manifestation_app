@@ -8,7 +8,7 @@ import { SOSModal } from "./SOSModal";
 import type { ProfileRow } from "../lib/supabase/types";
 
 const links = [
-  { href: "/", label: "Dashboard", icon: Sun },
+  { href: "/dashboard", label: "Dashboard", icon: Sun },
   { href: "/phases", label: "My Phases", icon: Path },
   { href: "/practice", label: "Daily Practice", icon: Spark },
   { href: "/evidence", label: "Evidence Journal", icon: Journal },

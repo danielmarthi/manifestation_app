@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { getProfile, getRecentEvidence, getTodayPracticeLog } from "../lib/data";
-import { QuickLog } from "../components/QuickLog";
-import { Check, Arrow } from "../components/Icons";
+import { getProfile, getRecentEvidence, getTodayPracticeLog } from "../../lib/data";
+import { QuickLog } from "../../components/QuickLog";
+import { Check, Arrow } from "../../components/Icons";
 
 const RITUAL_STEPS = [
   { id: "breathe", label: "Breathe — three breaths, body scan" },

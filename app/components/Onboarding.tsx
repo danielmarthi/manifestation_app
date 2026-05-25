@@ -119,7 +119,7 @@ export function Onboarding() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="px-8 pt-8 pb-2 max-w-2xl mx-auto w-full">
-        <Link href="/" className="text-[12px] text-ink-muted hover:text-ink">
+        <Link href="/dashboard" className="text-[12px] text-ink-muted hover:text-ink">
           ← skip onboarding
         </Link>
       </div>
