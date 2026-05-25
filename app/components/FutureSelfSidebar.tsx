@@ -1,51 +1,69 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import type { ProfileRow } from "../lib/supabase/types";
+
+// Truncate portrait to first N sentences
+function truncateSentences(text: string, n: number): string {
+  if (!text) return "";
+  const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
+  return sentences.slice(0, n).join(" ").trim();
+}
 
 export function FutureSelfSidebar({ profile }: { profile: ProfileRow }) {
   const [showOld, setShowOld] = useState(false);
 
-  const futureName = profile.future_self_name || `${profile.first_name ?? "You"}, Future`;
-  const futureBody = profile.future_self_body ?? [];
-  const futureTraits = profile.future_self_traits ?? [];
-  const oldName = profile.old_self_name || `${profile.first_name ?? "You"}, Before`;
-  const oldBody = profile.old_self_body ?? [];
+  // New v2 fields with fallbacks for legacy data
+  const futureName =
+    profile.future_self_name ||
+    `${profile.first_name ?? "You"}, Future`;
+
+  const futurePortrait = profile.future_self_portrait
+    ? truncateSentences(profile.future_self_portrait, 2)
+    : profile.future_self_body?.slice(0, 2).join(" ") ?? "";
+
+  const futureTags = profile.future_self_tags?.length
+    ? profile.future_self_tags
+    : profile.future_self_traits ?? [];
+
+  const oldName =
+    profile.old_self_name ||
+    `${profile.first_name ?? "You"}, Before`;
+
+  const oldPortrait = profile.old_self_portrait
+    ? truncateSentences(profile.old_self_portrait, 2)
+    : profile.old_self_body?.slice(0, 2).join(" ") ?? "";
 
   return (
-    <aside className="hidden lg:flex w-[320px] shrink-0 border-l border-line bg-surface flex-col">
-      <div className="sticky top-0 flex flex-col h-screen overflow-y-auto">
+    <aside className="hidden lg:flex w-[300px] shrink-0 border-l border-line bg-surface flex-col">
+      <div className="sticky top-14 flex flex-col h-[calc(100vh-3.5rem)] overflow-y-auto">
         <div className="px-6 pt-8 pb-4">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted mb-3">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted mb-4">
             Who I am becoming
           </div>
-          <div className="relative aspect-square rounded-full overflow-hidden bg-surface-2 border border-line">
-            <Image
-              src="/avatars/future.svg"
-              alt="Future self portrait"
-              width={320}
-              height={320}
-              className="object-cover"
-              priority
-            />
+
+          {/* Orb / avatar placeholder */}
+          <div className="relative w-20 h-20 mb-5">
             <div
-              className="absolute inset-0 candle-glow pointer-events-none"
+              className="absolute inset-0 rounded-full candle-glow"
               style={{
                 background:
-                  "radial-gradient(circle at 50% 45%, rgba(230,196,122,0.18) 0%, transparent 65%)",
+                  "radial-gradient(circle at 35% 35%, #e6c47a, #b35a3a 70%, #4a3f36 100%)",
+                boxShadow: "0 0 30px rgba(212,168,73,0.3)",
               }}
             />
           </div>
-          <div className="mt-5 font-display text-[22px] leading-tight text-ink">
+
+          <div className="font-display text-[20px] leading-tight text-ink mb-3">
             {futureName}
           </div>
-          {futureTraits.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {futureTraits.map((t) => (
+
+          {futureTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {futureTags.slice(0, 5).map((t) => (
                 <span
                   key={t}
-                  className="text-[10px] uppercase tracking-[0.14em] text-ink-soft border border-line/80 px-2 py-0.5 rounded-full bg-background/40"
+                  className="text-[10px] px-2.5 py-0.5 rounded-full bg-ochre/10 border border-ochre/30 text-ochre"
                 >
                   {t}
                 </span>
@@ -60,11 +78,15 @@ export function FutureSelfSidebar({ profile }: { profile: ProfileRow }) {
           <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted mb-3">
             Who she is
           </div>
-          <div className="space-y-3 font-display text-[15px] leading-[1.55] text-ink-soft">
-            {futureBody.map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
-          </div>
+          {futurePortrait ? (
+            <p className="font-display text-[14.5px] leading-[1.6] text-ink-soft">
+              {futurePortrait}
+            </p>
+          ) : (
+            <p className="text-[13px] text-ink-muted italic">
+              Your future self portrait will appear here after onboarding.
+            </p>
+          )}
         </div>
 
         <div className="px-6 pb-6 pt-3 border-t border-line/60">
@@ -73,19 +95,18 @@ export function FutureSelfSidebar({ profile }: { profile: ProfileRow }) {
             className="w-full flex items-center justify-between gap-3 text-left group"
           >
             <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden bg-surface-2 border border-line old-self-treatment">
-                <Image
-                  src="/avatars/old.svg"
-                  alt="Old self portrait"
-                  width={40}
-                  height={40}
-                />
-              </div>
+              <div
+                className="w-9 h-9 rounded-full bg-surface-2 border border-line old-self-treatment shrink-0"
+                style={{
+                  background:
+                    "radial-gradient(circle at 35% 35%, #c9c3bb, #8a7d70 70%, #4a3f36 100%)",
+                }}
+              />
               <div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted">
                   Where I came from
                 </div>
-                <div className="text-[13px] text-ink-soft group-hover:text-ink transition-colors">
+                <div className="text-[12.5px] text-ink-soft group-hover:text-ink transition-colors">
                   {oldName}
                 </div>
               </div>
@@ -98,7 +119,7 @@ export function FutureSelfSidebar({ profile }: { profile: ProfileRow }) {
       {showOld && (
         <OldSelfPopout
           name={oldName}
-          body={oldBody}
+          portrait={oldPortrait}
           onClose={() => setShowOld(false)}
         />
       )}
@@ -108,11 +129,11 @@ export function FutureSelfSidebar({ profile }: { profile: ProfileRow }) {
 
 function OldSelfPopout({
   name,
-  body,
+  portrait,
   onClose,
 }: {
   name: string;
-  body: string[];
+  portrait: string;
   onClose: () => void;
 }) {
   return (
@@ -123,22 +144,24 @@ function OldSelfPopout({
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" aria-hidden />
       <div
         className="relative z-10 max-w-md w-full bg-surface border border-line rounded-2xl shadow-2xl p-7 page-fade"
+        style={{ filter: "grayscale(70%)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted mb-3">
           Where I came from — honored, not erased
         </div>
-        <div className="relative aspect-square w-32 rounded-full overflow-hidden bg-surface-2 border border-line old-self-treatment mb-4">
-          <Image src="/avatars/old.svg" alt="Old self" width={128} height={128} />
-        </div>
-        <div className="font-display text-[22px] text-ink-soft mb-3 old-self-treatment">
+        <div className="font-display text-[22px] text-ink-soft mb-4">
           {name}
         </div>
-        <div className="space-y-3 text-[14px] leading-[1.6] text-ink-muted">
-          {body.map((line, i) => (
-            <p key={i}>{line}</p>
-          ))}
-        </div>
+        {portrait ? (
+          <p className="text-[14px] leading-[1.65] text-ink-muted">
+            {portrait}
+          </p>
+        ) : (
+          <p className="text-[13px] text-ink-muted italic">
+            Your old self portrait will appear here after onboarding.
+          </p>
+        )}
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}

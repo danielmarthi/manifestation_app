@@ -16,10 +16,12 @@ interface CoachConversationProps {
 }
 
 const SUGGESTIONS = [
-  "I'm feeling resistance.",
-  "Write me a new visualization.",
-  "Help me reframe something.",
-  "I need to do The Test Reframe.",
+  "I'm in resistance right now",
+  "Help me reframe something",
+  "Write me a visualization",
+  "I'm in a hard moment",
+  "Is this excess importance or alignment?",
+  "Help me break the habit of being myself",
 ];
 
 export function CoachConversation({
@@ -127,7 +129,7 @@ export function CoachConversation({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Say what's true right now…"
+              placeholder="Say what's actually true right now..."
               className="flex-1 px-4 py-3 bg-background border border-line rounded-xl text-[14.5px] focus:outline-none focus:border-terracotta"
             />
             <button

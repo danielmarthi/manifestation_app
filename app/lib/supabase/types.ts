@@ -11,21 +11,43 @@ export type Database = {
       profiles: {
         Row: {
           id: string;
+          // Stage 1 fields
           first_name: string | null;
+          full_name: string | null;
+          age: number | null;
+          occupation: string | null;
+          relationship_status: string | null;
+          about_text: string | null;
+          personal_context: Record<string, unknown> | null;
+          coach_style: string;
+          // Stage 2 fields
+          selected_areas: string[] | null;
+          // Stage 3 fields
+          onboarding_answers: Record<string, unknown>[] | null;
+          // Generated profile fields (new v2)
+          old_self_portrait: string | null;
+          old_self_tags: string[];
+          future_self_portrait: string | null;
+          future_self_tags: string[];
+          releasing: string[];
+          coaching_notes: string | null;
+          // Generated profile fields (legacy / still used)
           desire_area: string | null;
           desire_statement: string | null;
           primary_block: string | null;
           block_type: string | null;
           assumption: string | null;
           gap_statement: string | null;
+          future_self_name: string | null;
+          old_self_name: string | null;
+          // Legacy body arrays (kept for backward compat)
+          future_self_body: string[];
+          future_self_traits: string[];
+          old_self_body: string[];
+          // Progress tracking
           current_phase: number;
           streak: number;
           last_practice_date: string | null;
-          future_self_name: string | null;
-          future_self_body: string[];
-          future_self_traits: string[];
-          old_self_name: string | null;
-          old_self_body: string[];
           onboarding_completed_at: string | null;
           created_at: string;
           updated_at: string;
@@ -33,20 +55,35 @@ export type Database = {
         Insert: {
           id: string;
           first_name?: string | null;
+          full_name?: string | null;
+          age?: number | null;
+          occupation?: string | null;
+          relationship_status?: string | null;
+          about_text?: string | null;
+          personal_context?: Record<string, unknown> | null;
+          coach_style?: string;
+          selected_areas?: string[] | null;
+          onboarding_answers?: Record<string, unknown>[] | null;
+          old_self_portrait?: string | null;
+          old_self_tags?: string[];
+          future_self_portrait?: string | null;
+          future_self_tags?: string[];
+          releasing?: string[];
+          coaching_notes?: string | null;
           desire_area?: string | null;
           desire_statement?: string | null;
           primary_block?: string | null;
           block_type?: string | null;
           assumption?: string | null;
           gap_statement?: string | null;
+          future_self_name?: string | null;
+          old_self_name?: string | null;
+          future_self_body?: string[];
+          future_self_traits?: string[];
+          old_self_body?: string[];
           current_phase?: number;
           streak?: number;
           last_practice_date?: string | null;
-          future_self_name?: string | null;
-          future_self_body?: string[];
-          future_self_traits?: string[];
-          old_self_name?: string | null;
-          old_self_body?: string[];
           onboarding_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -54,20 +91,35 @@ export type Database = {
         Update: {
           id?: string;
           first_name?: string | null;
+          full_name?: string | null;
+          age?: number | null;
+          occupation?: string | null;
+          relationship_status?: string | null;
+          about_text?: string | null;
+          personal_context?: Record<string, unknown> | null;
+          coach_style?: string;
+          selected_areas?: string[] | null;
+          onboarding_answers?: Record<string, unknown>[] | null;
+          old_self_portrait?: string | null;
+          old_self_tags?: string[];
+          future_self_portrait?: string | null;
+          future_self_tags?: string[];
+          releasing?: string[];
+          coaching_notes?: string | null;
           desire_area?: string | null;
           desire_statement?: string | null;
           primary_block?: string | null;
           block_type?: string | null;
           assumption?: string | null;
           gap_statement?: string | null;
+          future_self_name?: string | null;
+          old_self_name?: string | null;
+          future_self_body?: string[];
+          future_self_traits?: string[];
+          old_self_body?: string[];
           current_phase?: number;
           streak?: number;
           last_practice_date?: string | null;
-          future_self_name?: string | null;
-          future_self_body?: string[];
-          future_self_traits?: string[];
-          old_self_name?: string | null;
-          old_self_body?: string[];
           onboarding_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -80,6 +132,7 @@ export type Database = {
           user_id: string;
           text: string;
           type: "inherited" | "self-created" | "fear-based" | "identity-based";
+          area: string | null;
           dissolved: boolean;
           dissolved_at: string | null;
           created_at: string;
@@ -89,6 +142,7 @@ export type Database = {
           user_id: string;
           text: string;
           type: "inherited" | "self-created" | "fear-based" | "identity-based";
+          area?: string | null;
           dissolved?: boolean;
           dissolved_at?: string | null;
           created_at?: string;
@@ -98,6 +152,7 @@ export type Database = {
           user_id?: string;
           text?: string;
           type?: "inherited" | "self-created" | "fear-based" | "identity-based";
+          area?: string | null;
           dissolved?: boolean;
           dissolved_at?: string | null;
           created_at?: string;
