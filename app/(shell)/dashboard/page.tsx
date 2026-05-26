@@ -12,11 +12,10 @@ const RITUAL_STEPS = [
 ] as const;
 
 const PHASES = [
-  "The Honest Audit",
+  "Awakening",
   "The Clearing",
-  "The Identity Blueprint",
-  "The Practice Stack",
-  "The Evidence Journal",
+  "Identity Blueprint",
+  "Living As",
 ] as const;
 
 export default async function Dashboard() {
@@ -119,7 +118,7 @@ export default async function Dashboard() {
             Current chapter
           </div>
           <div className="font-display text-[15px] text-ink-muted mb-1">
-            Phase {profile.current_phase} of 5
+            Phase {profile.current_phase} of 4
           </div>
           <h2 className="font-display text-[22px] text-ink leading-tight mb-5">
             {PHASES[profile.current_phase - 1]}

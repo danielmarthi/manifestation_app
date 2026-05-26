@@ -35,12 +35,21 @@ export async function completePracticeStep(update: PracticeStepUpdate) {
   const allDone = allSteps.every((s) => stepsCompleted[s]);
   const completedAt = allDone ? new Date().toISOString() : existing?.completed_at ?? null;
 
+  // Get current phase for phase_number column
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("current_phase")
+    .eq("id", user.id)
+    .maybeSingle();
+  const phaseNumber = profileData?.current_phase ?? 1;
+
   const upsertPayload = {
     user_id: user.id,
     practice_date: today,
     steps_completed: stepsCompleted,
     gratitude: update.gratitude ?? existing?.gratitude ?? null,
     completed_at: completedAt,
+    phase_number: phaseNumber,
   };
 
   const { error } = await supabase

@@ -31,7 +31,7 @@ export function Header({ profile }: { profile: ProfileRow }) {
           <span className="text-[11px] uppercase tracking-[0.16em] text-ink-muted leading-tight">
             Day {profile.streak}
           </span>
-          <span className="text-[11px] text-ink-soft leading-tight">Phase {profile.current_phase} of 5</span>
+          <span className="text-[11px] text-ink-soft leading-tight">Phase {profile.current_phase} of 4</span>
         </div>
         <form action="/auth/signout" method="post" className="flex">
           <button

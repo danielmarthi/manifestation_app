@@ -49,6 +49,10 @@ export type Database = {
           streak: number;
           last_practice_date: string | null;
           onboarding_completed_at: string | null;
+          // Phases v3 fields
+          program_start_date: string | null;
+          total_practice_days: number;
+          program_completed_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -85,6 +89,9 @@ export type Database = {
           streak?: number;
           last_practice_date?: string | null;
           onboarding_completed_at?: string | null;
+          program_start_date?: string | null;
+          total_practice_days?: number;
+          program_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -121,6 +128,9 @@ export type Database = {
           streak?: number;
           last_practice_date?: string | null;
           onboarding_completed_at?: string | null;
+          program_start_date?: string | null;
+          total_practice_days?: number;
+          program_completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -245,6 +255,7 @@ export type Database = {
           steps_completed: Record<string, boolean>;
           gratitude: string | null;
           completed_at: string | null;
+          phase_number: number;
           created_at: string;
         };
         Insert: {
@@ -254,6 +265,7 @@ export type Database = {
           steps_completed?: Record<string, boolean>;
           gratitude?: string | null;
           completed_at?: string | null;
+          phase_number?: number;
           created_at?: string;
         };
         Update: {
@@ -263,6 +275,91 @@ export type Database = {
           steps_completed?: Record<string, boolean>;
           gratitude?: string | null;
           completed_at?: string | null;
+          phase_number?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      phase_exercises: {
+        Row: {
+          id: string;
+          user_id: string;
+          phase: number;
+          slug: string;
+          prefill_content: string | null;
+          response: string;
+          ai_response: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          phase: number;
+          slug: string;
+          prefill_content?: string | null;
+          response: string;
+          ai_response?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          phase?: number;
+          slug?: string;
+          prefill_content?: string | null;
+          response?: string;
+          ai_response?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      weekly_insights: {
+        Row: {
+          id: string;
+          user_id: string;
+          week_number: number;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          week_number: number;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          week_number?: number;
+          content?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      milestone_summaries: {
+        Row: {
+          id: string;
+          user_id: string;
+          day_marker: number;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          day_marker: number;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          day_marker?: number;
+          content?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -313,6 +410,9 @@ export type EvidenceEntryRow = Database["public"]["Tables"]["evidence_entries"][
 export type CoachMessageRow = Database["public"]["Tables"]["coach_messages"]["Row"];
 export type PracticeLogRow = Database["public"]["Tables"]["practice_log"]["Row"];
 export type SosLogRow = Database["public"]["Tables"]["sos_logs"]["Row"];
+export type PhaseExerciseRow = Database["public"]["Tables"]["phase_exercises"]["Row"];
+export type WeeklyInsightRow = Database["public"]["Tables"]["weekly_insights"]["Row"];
+export type MilestoneSummaryRow = Database["public"]["Tables"]["milestone_summaries"]["Row"];
 
 // Enum types
 export type BeliefType = Database["public"]["Enums"]["belief_type"];
