@@ -421,6 +421,10 @@ export async function finaliseOnboarding(): Promise<void> {
 
   await supabase
     .from("profiles")
-    .update({ onboarding_completed_at: new Date().toISOString() })
+    .update({
+      onboarding_completed_at: new Date().toISOString(),
+      // Day 1 of the journey begins the moment onboarding completes.
+      program_start_date: new Date().toISOString().slice(0, 10),
+    })
     .eq("id", user.id);
 }

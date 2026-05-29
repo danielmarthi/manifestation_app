@@ -47,10 +47,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logged in but visiting /sign-in → bounce to dashboard
+  // Logged in but visiting /sign-in → bounce to today
   if (user && path === "/sign-in") {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/today";
     url.search = "";
     return NextResponse.redirect(url);
   }

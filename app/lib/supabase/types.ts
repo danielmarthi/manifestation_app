@@ -254,6 +254,8 @@ export type Database = {
           practice_date: string;
           steps_completed: Record<string, boolean>;
           gratitude: string | null;
+          daily_note: string | null;
+          mood: string | null;
           completed_at: string | null;
           phase_number: number;
           created_at: string;
@@ -264,6 +266,8 @@ export type Database = {
           practice_date: string;
           steps_completed?: Record<string, boolean>;
           gratitude?: string | null;
+          daily_note?: string | null;
+          mood?: string | null;
           completed_at?: string | null;
           phase_number?: number;
           created_at?: string;
@@ -274,6 +278,8 @@ export type Database = {
           practice_date?: string;
           steps_completed?: Record<string, boolean>;
           gratitude?: string | null;
+          daily_note?: string | null;
+          mood?: string | null;
           completed_at?: string | null;
           phase_number?: number;
           created_at?: string;

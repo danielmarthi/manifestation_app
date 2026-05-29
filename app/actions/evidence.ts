@@ -22,6 +22,8 @@ export async function logEvidence(kind: EvidenceKind, text: string) {
   if (error) return { ok: false, error: error.message } as const;
 
   revalidatePath("/");
+  revalidatePath("/today");
   revalidatePath("/evidence");
+  revalidatePath("/calendar");
   return { ok: true } as const;
 }

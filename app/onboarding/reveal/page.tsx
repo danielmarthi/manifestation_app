@@ -5,7 +5,7 @@ import { RevealClient } from "./RevealClient";
 export default async function RevealPage() {
   const profile = await getProfile();
   if (!profile) redirect("/sign-in");
-  if (profile.onboarding_completed_at) redirect("/dashboard");
+  if (profile.onboarding_completed_at) redirect("/today");
   if (!profile.future_self_portrait) redirect("/onboarding/generating");
 
   return (

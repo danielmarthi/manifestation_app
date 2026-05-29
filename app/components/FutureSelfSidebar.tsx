@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { ProfileRow } from "../lib/supabase/types";
 
 // Truncate portrait to first N sentences
@@ -87,6 +88,12 @@ export function FutureSelfSidebar({ profile }: { profile: ProfileRow }) {
               Your future self portrait will appear here after onboarding.
             </p>
           )}
+          <Link
+            href="/identity"
+            className="inline-block mt-4 text-[12px] text-terracotta hover:text-ink transition-colors"
+          >
+            View full identity →
+          </Link>
         </div>
 
         <div className="px-6 pb-6 pt-3 border-t border-line/60">

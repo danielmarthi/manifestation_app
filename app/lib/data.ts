@@ -230,3 +230,136 @@ export async function getSosLogs(limit = 3) {
     .limit(limit);
   return data ?? [];
 }
+
+// ─── The day engine ───────────────────────────────────────────────────────────
+
+export interface JourneyState {
+  /** Calendar days since program start (start date = Day 1). */
+  journeyDay: number;
+  /** Distinct days a full ritual was completed. Drives milestones + phase gating. */
+  practicedDays: number;
+  /** Consecutive completed days. */
+  streak: number;
+  /** ISO date (YYYY-MM-DD) the program began, or null if not set. */
+  startDate: string | null;
+}
+
+function dateOnly(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function daysBetweenInclusive(startISO: string, endISO: string): number {
+  const start = new Date(startISO + "T00:00:00Z").getTime();
+  const end = new Date(endISO + "T00:00:00Z").getTime();
+  const diff = Math.floor((end - start) / (1000 * 60 * 60 * 24));
+  return diff + 1; // start date counts as Day 1
+}
+
+/**
+ * The single source of truth for "what day is it" in the program.
+ * - journeyDay: calendar-based (days since program_start_date, inclusive)
+ * - practicedDays: completion-based (rows in practice_log with completed_at)
+ */
+export async function getJourneyState(): Promise<JourneyState> {
+  const supabase = await createClient();
+  const userId = await requireUserId();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("program_start_date, streak, created_at")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const startDate =
+    profile?.program_start_date ??
+    (profile?.created_at ? dateOnly(new Date(profile.created_at)) : null);
+
+  const today = dateOnly(new Date());
+  const journeyDay = startDate
+    ? Math.max(1, daysBetweenInclusive(startDate, today))
+    : 1;
+
+  const { count } = await supabase
+    .from("practice_log")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .not("completed_at", "is", null);
+
+  return {
+    journeyDay,
+    practicedDays: count ?? 0,
+    streak: profile?.streak ?? 0,
+    startDate,
+  };
+}
+
+export async function getPracticeLogByDate(
+  date: string,
+): Promise<PracticeLogRow | null> {
+  const supabase = await createClient();
+  const userId = await requireUserId();
+  const { data } = await supabase
+    .from("practice_log")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("practice_date", date)
+    .maybeSingle();
+  return data;
+}
+
+export async function getAllPracticeLogs(): Promise<PracticeLogRow[]> {
+  const supabase = await createClient();
+  const userId = await requireUserId();
+  const { data } = await supabase
+    .from("practice_log")
+    .select("*")
+    .eq("user_id", userId)
+    .order("practice_date", { ascending: true });
+  return data ?? [];
+}
+
+export async function getEvidenceByDate(
+  date: string,
+): Promise<EvidenceEntryRow[]> {
+  const supabase = await createClient();
+  const userId = await requireUserId();
+  const start = `${date}T00:00:00.000Z`;
+  const end = `${date}T23:59:59.999Z`;
+  const { data } = await supabase
+    .from("evidence_entries")
+    .select("*")
+    .eq("user_id", userId)
+    .gte("occurred_at", start)
+    .lte("occurred_at", end)
+    .order("occurred_at", { ascending: true });
+  return data ?? [];
+}
+
+/** Completed ritual days logged while in a given phase. Drives phase day-gating. */
+export async function getCompletedDaysInPhase(phase: number): Promise<number> {
+  const supabase = await createClient();
+  const userId = await requireUserId();
+  const { count } = await supabase
+    .from("practice_log")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("phase_number", phase)
+    .not("completed_at", "is", null);
+  return count ?? 0;
+}
+
+/** Map of YYYY-MM-DD → count of evidence entries that day (for calendar dots). */
+export async function getEvidenceCountsByDate(): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const userId = await requireUserId();
+  const { data } = await supabase
+    .from("evidence_entries")
+    .select("occurred_at")
+    .eq("user_id", userId);
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const d = dateOnly(new Date(row.occurred_at));
+    counts[d] = (counts[d] ?? 0) + 1;
+  }
+  return counts;
+}

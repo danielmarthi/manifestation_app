@@ -9,7 +9,7 @@ export default async function QuestionsPage() {
   if (!profile.selected_areas || (profile.selected_areas as string[]).length === 0) {
     redirect("/onboarding/areas");
   }
-  if (profile.onboarding_completed_at) redirect("/dashboard");
+  if (profile.onboarding_completed_at) redirect("/today");
 
   const selectedAreas = profile.selected_areas as string[];
   const savedAnswers = (profile.onboarding_answers as Record<string, unknown>[] | null) ?? [];

@@ -4,6 +4,8 @@ import {
   getIdentityStatements,
 } from "../../lib/data";
 import { OldSelfSection } from "./OldSelfSection";
+import { AssumptionEditor } from "./AssumptionEditor";
+import { IdentityStatementsEditor } from "./IdentityStatementsEditor";
 
 const typeColor: Record<string, string> = {
   inherited: "var(--ochre)",
@@ -87,47 +89,13 @@ export default async function IdentityPage() {
           </div>
         )}
 
-        {/* Assumption */}
-        {profile.assumption && (
-          <div className="mb-8">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-ink-muted mb-2">
-              My assumption — I live from this
-            </div>
-            <div className="bg-surface-2/60 border border-line rounded-2xl p-7">
-              <p className="font-display text-[26px] sm:text-[30px] text-ink leading-[1.2]">
-                "{profile.assumption}"
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Assumption — editable */}
+        <AssumptionEditor initial={profile.assumption ?? "It is already done."} />
 
-        {/* Identity statements */}
-        <section className="mb-8">
-          <h2 className="font-display text-[20px] text-ink mb-4">
-            Identity statements
-          </h2>
-          {identityStatements.length === 0 ? (
-            <p className="text-[13px] text-ink-muted">
-              No statements yet — they'll appear here after onboarding.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {identityStatements.map((s, i) => (
-                <div
-                  key={s.id}
-                  className="bg-surface border border-line rounded-xl px-5 py-4 flex items-center gap-4"
-                >
-                  <span className="font-display text-[22px] text-terracotta/70 w-8">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <p className="font-display text-[17px] text-ink leading-snug">
-                    "{s.text}"
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+        {/* Identity statements — editable */}
+        <IdentityStatementsEditor
+          initial={identityStatements.map((s) => ({ id: s.id, text: s.text }))}
+        />
 
         {/* Belief map */}
         <section>

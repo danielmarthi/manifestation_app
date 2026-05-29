@@ -33,7 +33,7 @@ export function ProgramCompleteClient({
     setFinalising(true);
     startTransition(async () => {
       await completeProgram();
-      router.push("/dashboard");
+      router.push("/today");
     });
   }
 
@@ -125,7 +125,7 @@ export function ProgramCompleteClient({
         disabled={finalising}
         className="px-8 py-3.5 bg-terracotta text-parchment rounded-xl font-display text-[16px] hover:bg-terracotta/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {finalising ? "Continuing..." : "Return to dashboard →"}
+        {finalising ? "Continuing..." : "Return to today →"}
       </button>
 
       <p className="text-[12px] text-ink-muted mt-4 text-center">

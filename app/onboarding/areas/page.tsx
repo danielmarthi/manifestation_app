@@ -6,7 +6,7 @@ export default async function AreasPage() {
   const profile = await getProfile();
   if (!profile) redirect("/sign-in");
   if (!profile.about_text) redirect("/onboarding/you");
-  if (profile.onboarding_completed_at) redirect("/dashboard");
+  if (profile.onboarding_completed_at) redirect("/today");
 
   return (
     <OnboardingAreas

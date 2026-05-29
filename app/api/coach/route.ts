@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     { data: identityStatements },
     { data: recentEvidence },
     { data: recentSos },
+    { data: recentNotes },
   ] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
     supabase
@@ -61,6 +62,13 @@ export async function POST(req: Request) {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("practice_log")
+      .select("practice_date, daily_note, mood")
+      .eq("user_id", user.id)
+      .not("daily_note", "is", null)
+      .order("practice_date", { ascending: false })
+      .limit(5),
   ]);
 
   if (!profile) {
@@ -68,6 +76,23 @@ export async function POST(req: Request) {
   }
 
   const coachStyle = (profile.coach_style as string) || "mentor";
+
+  // The day engine: journey day (calendar) + practiced days (completion).
+  const PHASE_NAMES = ["Awakening", "The Clearing", "Identity Blueprint", "Living As"];
+  const today = new Date().toISOString().slice(0, 10);
+  const startDate =
+    profile.program_start_date ?? (profile.created_at ? profile.created_at.slice(0, 10) : null);
+  const journeyDay = startDate
+    ? Math.max(
+        1,
+        Math.floor(
+          (new Date(today + "T00:00:00Z").getTime() -
+            new Date(startDate + "T00:00:00Z").getTime()) /
+            86400000,
+        ) + 1,
+      )
+    : 1;
+  const phaseName = PHASE_NAMES[(profile.current_phase ?? 1) - 1] ?? "Awakening";
 
   const systemPrompt = buildSystemPrompt({
     name: profile.first_name ?? "friend",
@@ -82,9 +107,17 @@ export async function POST(req: Request) {
     futureSelfPortrait: profile.future_self_portrait ?? profile.future_self_body?.join(" "),
     oldSelfPortrait: profile.old_self_portrait ?? profile.old_self_body?.join(" "),
     currentPhase: profile.current_phase,
+    phaseName,
+    journeyDay,
+    practicedDays: profile.total_practice_days ?? 0,
     streak: profile.streak,
     selectedAreas: profile.selected_areas as string[] | null,
     coachingNotes: profile.coaching_notes,
+    recentNotes: (recentNotes ?? []).map((n) => ({
+      date: n.practice_date,
+      note: n.daily_note ?? "",
+      mood: n.mood ?? "",
+    })),
     beliefs: (beliefs ?? []).map((b) => ({
       text: b.text,
       type: b.type,
@@ -176,6 +209,9 @@ interface CoachCtx {
   futureSelfPortrait: string | undefined;
   oldSelfPortrait: string | undefined;
   currentPhase: number;
+  phaseName: string;
+  journeyDay: number;
+  practicedDays: number;
   streak: number;
   selectedAreas: string[] | null;
   coachingNotes: string | null;
@@ -183,6 +219,7 @@ interface CoachCtx {
   identityStatements: string[];
   recentEvidence: { date: string; kind: string; text: string }[];
   recentResistance: { date: string; feeling: string }[];
+  recentNotes: { date: string; note: string; mood: string }[];
 }
 
 function buildSystemPrompt(ctx: CoachCtx): string {
@@ -268,6 +305,12 @@ Reflective and deep. They respond to language that lands emotionally and connect
         .join("\n")
     : null;
 
+  const notesList = ctx.recentNotes.length
+    ? ctx.recentNotes
+        .map((n) => `${n.date}${n.mood ? ` [${n.mood}]` : ""}: ${n.note}`)
+        .join("\n")
+    : null;
+
   const PART3 = `WHO YOU ARE COACHING:
 Name: ${ctx.name}
 Coach style preference: ${ctx.coachStyle}
@@ -280,8 +323,10 @@ ${ctx.blockType ? `Block type: ${ctx.blockType}` : ""}
 ${ctx.futureSelfName ? `Their future self: ${ctx.futureSelfName}` : ""}
 ${ctx.futureSelfPortrait ? `Future self portrait: ${ctx.futureSelfPortrait}` : ""}
 ${ctx.oldSelfPortrait ? `Old self portrait: ${ctx.oldSelfPortrait}` : ""}
-Current phase: Phase ${ctx.currentPhase} of 5
-Days in practice: ${ctx.streak}
+Current phase: Phase ${ctx.currentPhase} of 4 — ${ctx.phaseName}
+Journey day: Day ${ctx.journeyDay} (calendar days since they began)
+Days actually practiced: ${ctx.practicedDays}
+Current streak: ${ctx.streak}
 ${ctx.selectedAreas?.length ? `Selected life areas (in priority order): ${ctx.selectedAreas.join(", ")}` : ""}
 
 ${beliefsList ? `Their core beliefs (from intake):\n${beliefsList}` : ""}
@@ -289,6 +334,8 @@ ${beliefsList ? `Their core beliefs (from intake):\n${beliefsList}` : ""}
 ${statementsList ? `Their identity statements:\n${statementsList}` : ""}
 
 ${evidenceList ? `Recent evidence log (last 5 entries):\n${evidenceList}` : ""}
+
+${notesList ? `Recent daily notes (their own words, most recent first):\n${notesList}` : ""}
 
 ${resistanceList ? `Recent hard moments (last 3):\n${resistanceList}` : ""}
 

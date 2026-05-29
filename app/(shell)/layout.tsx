@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { Header } from "../components/Header";
-import { LeftNav } from "../components/LeftNav";
-import { FutureSelfSidebar } from "../components/FutureSelfSidebar";
-import { getProfile } from "../lib/data";
+import { ConditionalSidebar } from "../components/ConditionalSidebar";
+import { getProfile, getJourneyState } from "../lib/data";
 
 export default async function ShellLayout({
   children,
@@ -16,13 +15,18 @@ export default async function ShellLayout({
     redirect("/onboarding");
   }
 
+  const journey = await getJourneyState();
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header profile={profile} />
+      <Header
+        profile={profile}
+        journeyDay={journey.journeyDay}
+        practicedDays={journey.practicedDays}
+      />
       <div className="flex flex-1">
-        <LeftNav profile={profile} />
         <main className="flex-1 min-w-0">{children}</main>
-        <FutureSelfSidebar profile={profile} />
+        <ConditionalSidebar profile={profile} />
       </div>
     </div>
   );

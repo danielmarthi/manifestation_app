@@ -3,12 +3,14 @@ import Link from "next/link";
 import {
   getProfile,
   getCompletedExerciseSlugs,
+  getCompletedDaysInPhase,
 } from "../../../lib/data";
 import {
   PHASE_INTROS,
   getExercisesByPhase,
   getCoreExercisesByPhase,
 } from "../../../lib/exercises";
+import { AdvanceButton } from "./AdvanceButton";
 
 interface Props {
   params: Promise<{ phase: string }>;
@@ -23,9 +25,10 @@ export default async function PhaseDetailPage({ params }: Props) {
   const phaseIntro = PHASE_INTROS.find((p) => p.phase === phaseNum);
   if (!phaseIntro) notFound();
 
-  const [profile, completedSlugs] = await Promise.all([
+  const [profile, completedSlugs, daysInPhase] = await Promise.all([
     getProfile(),
     getCompletedExerciseSlugs(),
+    getCompletedDaysInPhase(phaseNum),
   ]);
   if (!profile) return null;
 
@@ -61,6 +64,11 @@ export default async function PhaseDetailPage({ params }: Props) {
   const completedCount = exercises.filter((e) => completedSet.has(e.slug)).length;
   const coreCount = coreExercises.filter((e) => completedSet.has(e.slug)).length;
   const allCoreComplete = coreCount === coreExercises.length;
+
+  // Day-based gating: each phase has a soft minimum of practiced days.
+  const softMin = phaseIntro.minDays;
+  const daysMet = daysInPhase >= softMin;
+  const phaseReady = allCoreComplete && daysMet;
 
   return (
     <div className="page-fade px-8 lg:px-12 py-10 max-w-[760px] mx-auto">
@@ -191,40 +199,45 @@ export default async function PhaseDetailPage({ params }: Props) {
         <div
           className={
             "border rounded-2xl p-6 " +
-            (allCoreComplete
+            (phaseReady
               ? "border-terracotta/50 bg-terracotta/5"
               : "border-line bg-surface/40")
           }
         >
-          {allCoreComplete ? (
+          {/* Requirements checklist */}
+          <div className="space-y-2.5 mb-5">
+            <Requirement
+              met={allCoreComplete}
+              label="Core exercises"
+              detail={`${coreCount} of ${coreExercises.length} complete`}
+            />
+            <Requirement
+              met={daysMet}
+              label="Days practiced in this phase"
+              detail={`${daysInPhase} of ${softMin} minimum`}
+            />
+          </div>
+
+          {phaseReady ? (
             <>
               <p className="font-display text-[18px] text-ink mb-1">
-                All core exercises complete.
+                {phaseNum === 4
+                  ? "You've lived it. The program is complete."
+                  : `Phase ${phaseNum} is complete.`}
               </p>
               <p className="text-[13px] text-ink-soft mb-4">
                 {phaseNum === 4
                   ? "Complete the program when you're ready."
                   : `You're ready to move to Phase ${phaseNum + 1}.`}
               </p>
-              <Link
-                href={
+              <AdvanceButton
+                phaseNum={phaseNum}
+                label={
                   phaseNum === 4
-                    ? "/phases/complete"
-                    : `/phases/${phaseNum + 1}`
+                    ? "Complete the program"
+                    : `Begin Phase ${phaseNum + 1}`
                 }
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-terracotta text-parchment rounded-xl text-[13px] font-medium hover:bg-terracotta/90 transition-colors"
-              >
-                {phaseNum === 4 ? "Complete the program" : `Begin Phase ${phaseNum + 1}`}
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path
-                    d="M3 7h8M7 3l4 4-4 4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Link>
+              />
             </>
           ) : (
             <>
@@ -232,14 +245,45 @@ export default async function PhaseDetailPage({ params }: Props) {
                 Phase in progress
               </p>
               <p className="text-[13px] text-ink-muted">
-                Complete all {coreExercises.length} core exercises to unlock
-                Phase {phaseNum + 1}.{" "}
-                {coreExercises.length - coreCount} remaining.
+                {!allCoreComplete &&
+                  `${coreExercises.length - coreCount} core exercise${
+                    coreExercises.length - coreCount === 1 ? "" : "s"
+                  } remaining. `}
+                {!daysMet &&
+                  `${softMin - daysInPhase} more practiced day${
+                    softMin - daysInPhase === 1 ? "" : "s"
+                  } in this phase. `}
+                Both unlock Phase {phaseNum + 1 <= 4 ? phaseNum + 1 : "completion"}.
               </p>
             </>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function Requirement({
+  met,
+  label,
+  detail,
+}: {
+  met: boolean;
+  label: string;
+  detail: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        className={
+          "w-5 h-5 rounded-full flex items-center justify-center text-[11px] shrink-0 " +
+          (met ? "bg-terracotta text-parchment" : "border border-line text-ink-muted")
+        }
+      >
+        {met ? "✓" : ""}
+      </span>
+      <span className="text-[13px] text-ink flex-1">{label}</span>
+      <span className="text-[12px] text-ink-muted">{detail}</span>
     </div>
   );
 }

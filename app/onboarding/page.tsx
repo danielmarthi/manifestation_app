@@ -14,7 +14,7 @@ export default async function OnboardingIndex() {
 
   // Already finished onboarding
   if (profile.onboarding_completed_at) {
-    redirect("/dashboard");
+    redirect("/today");
   }
 
   // Generated but not yet confirmed (reveal not clicked)

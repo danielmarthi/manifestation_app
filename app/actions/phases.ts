@@ -94,7 +94,7 @@ Respond in 2–4 short paragraphs. No bullet points. No headers. No "Great job!"
   revalidatePath(`/phases/${def.phase}/${slug}`);
   revalidatePath(`/phases/${def.phase}`);
   revalidatePath("/phases");
-  revalidatePath("/dashboard");
+  revalidatePath("/today");
 
   return { ok: true, aiResponse: aiResponse ?? undefined };
 }
@@ -141,7 +141,7 @@ export async function advancePhase(): Promise<{
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/phases");
-  revalidatePath("/dashboard");
+  revalidatePath("/today");
   return { ok: true, newPhase };
 }
 
@@ -216,7 +216,7 @@ export async function completeProgram(): Promise<{ ok: boolean; error?: string }
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/phases");
-  revalidatePath("/dashboard");
+  revalidatePath("/today");
   return { ok: true };
 }
 

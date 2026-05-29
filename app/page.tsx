@@ -69,7 +69,7 @@ function LandingNav({ isAuthed }: { isAuthed: boolean }) {
         <div className="flex items-center gap-3">
           {isAuthed ? (
             <Link
-              href="/dashboard"
+              href="/today"
               className="px-5 py-2 rounded-full bg-ink text-surface text-[13px] hover:bg-ink-soft transition-colors"
             >
               Open the app →
@@ -136,7 +136,7 @@ function Hero({ isAuthed }: { isAuthed: boolean }) {
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
-            href={isAuthed ? "/dashboard" : "/sign-in"}
+            href={isAuthed ? "/today" : "/sign-in"}
             className="px-7 py-3.5 rounded-full bg-ink text-surface text-[14px] hover:bg-ink-soft transition-colors shadow-sm"
           >
             {isAuthed ? "Continue your practice →" : "Begin your shift — free"}
@@ -591,7 +591,7 @@ function FinalCTA({ isAuthed }: { isAuthed: boolean }) {
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
-            href={isAuthed ? "/dashboard" : "/sign-in"}
+            href={isAuthed ? "/today" : "/sign-in"}
             className="px-8 py-3.5 rounded-full bg-ink text-surface text-[14.5px] hover:bg-ink-soft transition-colors"
           >
             {isAuthed ? "Open my dashboard →" : "Begin your shift — free"}

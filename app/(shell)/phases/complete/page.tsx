@@ -72,7 +72,7 @@ export default async function ProgramCompletePage() {
     getMilestoneSummaries(),
   ]);
 
-  if (!profile) redirect("/dashboard");
+  if (!profile) redirect("/today");
 
   // Gate: must have actually completed phase 4
   // Allow access if current_phase is 4 and program_completed_at is set,

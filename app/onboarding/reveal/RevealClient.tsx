@@ -38,7 +38,7 @@ export function RevealClient({
     setTimeout(() => {
       startTransition(async () => {
         await finaliseOnboarding();
-        router.push("/dashboard");
+        router.push("/today");
       });
     }, 700);
   }

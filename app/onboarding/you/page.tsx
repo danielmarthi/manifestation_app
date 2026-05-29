@@ -5,7 +5,7 @@ import { OnboardingYou } from "./OnboardingYou";
 export default async function YouPage() {
   const profile = await getProfile();
   if (!profile) redirect("/sign-in");
-  if (profile.onboarding_completed_at) redirect("/dashboard");
+  if (profile.onboarding_completed_at) redirect("/today");
 
   return (
     <OnboardingYou
